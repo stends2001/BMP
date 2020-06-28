@@ -1,0 +1,739 @@
+
+import nano.*;
+import java.awt.Color;
+import java.util.Random;
+import java.util.Arrays;
+
+public class Exercise3_final {
+
+    public Exercise3_final() {
+        // Begin of code for final exercise
+        
+//
+//
+// 1) BASICS, PREDEFINING
+//
+//
+        int xSize = 640;                                                                                                        
+        int ySize = 360;
+        Canvas screen   = new Canvas(xSize, ySize, 0, 0);
+        Random rnd      = new Random();
+        Pen pen         = new Pen(screen); 
+        boolean stop    = false;
+        int t           = 0;
+        
+        //specific field to draw first cells
+        int xBound1up   =   80;                                                 //x_upper bound for stem cells
+        int xBound1down =   0;                                                  //x_lower bound for all cells
+        int yBound1up   =   ySize;                                              //y_upper bound for all cells
+        int yBound1down =   0;                                                  //y_lower bound for all cells
+        
+        //basics for first cells
+        int N=25;                                                               //amount of stem cells
+        int xpos1 []     =      new int [N];                                    //x_positions stem cells
+        int ypos1 []     =      new int [N];                                    //y_positions stem cells
+        int R1    []     =      new int [N];                                    //Radii stem cells
+        int speed1[]     =      new int [N];                                    //speed stem cells
+        int dx1[]        =      new int [N];                                    //dx stem cells
+        int dy1[]        =      new int [N];                                    //dy stem cells
+        double dist []   =      new double  [N];                                //to calculate the distance between two cells
+        
+        //basics for morphogen
+        int            N_morph          =             10000000;                 //infinetely long
+        int         [] xpos_morph       = new int     [N_morph];                //x_positions morphogen
+        int         [] ypos_morph       = new int     [N_morph];                //y_positions morphogen
+        int            R_morph          =             2;                        //Radii morphogen, now just an integer. It's equal for all molecules
+        boolean     [] morph_exist      = new boolean [N_morph];                //whether or not a specific morphogen exists
+        int         [] t_morph          = new int     [N_morph];                //timesteps that a morph is made
+        int         [] dx_morph         = new int     [N_morph];                //dx morphogen
+        int         [] dy_morph         = new int     [N_morph];                //dy morphogen
+        int            amount_morph     =             0;                        //amount of morph that exist at one time point, changes over time!
+       
+        //basics for intermediate cells
+        int             N_intermediate      =             10000000;             //infinetely long
+        boolean     []  intermediate_exist  = new boolean [N_intermediate];     //whether or not an intermediate cell exists
+        int         []  xpos_intermediate   = new int     [N_intermediate];     //x_positions intermediates
+        int         []  ypos_intermediate   = new int     [N_intermediate];     //y_positions intermediates
+        int         []  R_intermediate      = new int     [N_intermediate];     //Radii intermediates
+        int         []  dx_intermediate     = new int     [N_intermediate];     //dx intermediates
+        int         []  dy_intermediate     = new int     [N_intermediate];     //dy intermediates  
+        int             amount_intermediate =              0;                   //amount of intermediates existing at one time point
+        
+        //basics for blue cells
+        int             N_blue           =             10000000;                //infinetely long
+        boolean     []  blue_exist       = new boolean [N_blue];                //wheter or not a blue cell exists
+        int         []  xpos_blue        = new int     [N_blue];                //x_positions blue cells
+        int         []  ypos_blue        = new int     [N_blue];                //y_positions blue cells
+        int         []  R_blue           = new int     [N_blue];                //Radii blue cells
+        int         []  dx_blue          = new int     [N_blue];                //dx blue cells
+        int         []  dy_blue          = new int     [N_blue];                //dy blue cells
+        int             amount_blue      =              0;                      //amount of blue cells existing at one time point
+        
+        //basics for pink cells
+        int             N_pink           =             10000000;                //infinetely long
+        boolean     []  pink_exist       = new boolean [N_pink];                //whether or not a pink cell exists
+        int         []  xpos_pink        = new int     [N_pink];                //x_positions pink cells
+        int         []  ypos_pink        = new int     [N_pink];                //y_positions pink cells
+        int         []  R_pink           = new int     [N_pink];                //Radii pink cells
+        int         []  dx_pink          = new int     [N_pink];                //dx pink cells
+        int         []  dy_pink          = new int     [N_pink];                //dy pink cells
+        int             amount_pink      =              0;                      //amount of pink cells existing at one time point
+        
+        //basics for red cells
+        int             N_red           =             10000000;                 //infinetely long
+        boolean     []  red_exist       = new boolean [N_red];                  //wheter or not a red cell exists
+        int         []  xpos_red        = new int     [N_red];                  //x_positions red cells
+        int         []  ypos_red        = new int     [N_red];                  //y_positions red cells
+        int         []  R_red           = new int     [N_red];                  //Radii red cells
+        int         []  dx_red          = new int     [N_red];                  //dx red cells
+        int         []  dy_red          = new int     [N_red];                  //dy red cells
+        int             amount_red      =              0;                       //amount of red cells existing at one time point
+        
+        //basics for all together
+        int             N_all           =             10000000;
+        boolean     []  all_exist       = new boolean [N_all];
+        int         []  all_xpos        = new int     [N_all];
+        int         []  all_ypos        = new int     [N_all];
+        int         []  all_R           = new int     [N_all];
+        int             amount_all      =             0;
+        
+//
+//
+// 2) DRAWING OF STEM CELLS
+//
+//   
+
+// 2.1) RANDOM VALUES
+for (int i=0; i<N; i++){
+    R1[i]=rnd.nextInt(5)+15;                                                    //Random radii, stem cells
+    xpos1[i]=rnd.nextInt(xBound1up-R1[i])+R1[i];                                //random xpos, stem cells
+    ypos1[i]=rnd.nextInt(ySize-R1[i])+R1[i];                                    //random ypos, stem cells
+       
+// 2.2) DRAWING WITHOUT OVERLAP
+for (int ii=0; ii<i; ii++){                                                                                   
+    if (overlap(xpos1[i],ypos1[i],R1[i],xpos1[ii],ypos1[ii],R1[ii])==true)  {   //IF they overlap, see method
+        R1[i]=R1[i]-1;                                                          //R=R-1
+        ii=ii-1;                                                                //rerun the loop, check whether there's still overlap               
+            if (R1[i]<8){                                                       //radius<8, barely visible
+                ii=i;                                                           //stop the ii loop
+                i=i-1;}}}                                                       //give a random x, y and R again
+
+// 2.3) DRAWING STEM CELLS
+pen.drawCircle(xpos1[i], ypos1[i], R1[i], Color.GRAY, false);}
+screen.update();
+screen.pause(5);
+
+//
+//
+// THE REST
+//
+//  
+
+while (stop==false){
+    screen.clear();
+    
+//
+//
+// 3) UPDATING STEM CELLS
+//
+//  
+
+// 3.1) VELOCITIES FOR STEM CELLS
+for (int i=0; i<N;i++){
+            dx1[i]=rnd.nextInt(3)-1;                                            //Take random x- & y-velocities
+            dy1[i]=rnd.nextInt(3)-1;}
+        
+
+// 3.2) BOUNDARIES FOR STEM CELLS
+for (int i=0; i<N;i++){ 
+        int xboundary = out_of_frame_x(xpos1[i],R1[i],0,xBound1up);               //method, special input is the lower x bound, there's a specific small area for the stem cells to be in
+        int yboundary = out_of_frame_y(ypos1[i],R1[i],yBound1up);               //see method. For y boundaries, all methods are the same
+            if (xboundary==1){dx1[i]=Math.abs(dx1[i]);}                         //if x is at 0, always get a dx>0
+            if (xboundary==2){dx1[i]=-Math.abs(dx1[i]);}                        //if x is at upper bound,  a dx<0
+            if (yboundary==1){dy1[i]=Math.abs(dy1[i]);}                         //if y is at 0, always get a dy>0
+            if (yboundary==2){dy1[i]=-Math.abs(dy1[i]);}                        //if y is at upper bound,  a dy<0           
+}
+
+// 3.3) COLLIDING OF STEM CELLS WITH EACHOTHER 
+for (int i=0; i<N; i++){        
+    for (int j=0; j<i; j++){
+    if (overlap(xpos1[i],ypos1[i],R1[i],xpos1[j],ypos1[j],R1[j])==true){    
+        int difference_x = xpos1[i]-xpos1[j];                                   //check the difference in x
+        int difference_y = ypos1[i]-ypos1[j];                                   //check difference in y
+        
+        if (difference_x<0){dx1[j]=Math.abs(dx1[j]);                            //move away from 
+                            dx1[i]=-Math.abs(dx1[i]);}                          //eachother
+        if (difference_x>0){dx1[i]=Math.abs(dx1[i]);                            //^^^
+                            dx1[j]=-Math.abs(dx1[j]);}                          //^^^
+        
+        if (difference_y<0){dy1[j]=Math.abs(dy1[j]);                            //^^^
+                            dy1[i]=-Math.abs(dy1[i]);}                          //^^^
+        
+        if (difference_y>0){dy1[i]=Math.abs(dy1[i]);                            //^^^
+                            dy1[j]=-Math.abs(dy1[j]);}                          //^^^
+}}}
+
+for (int i=0; i<N; i++){                                                        //updating movement
+      xpos1 [i]=xpos1[i]+dx1[i];
+      ypos1 [i]=ypos1[i]+dy1[i];}              
+//
+//
+// 4) MORPHOGEN
+//
+//  
+
+// 4.1) EXISTENCE MORPHOGEN
+if (amount_morph>0){                                                            // loop is only run if amount of morphogen > 0
+    for (int n_morph=0; n_morph<=amount_morph-1; n_morph++){                    // loop runs from 0 to the index of the last morphogen
+        if (morph_exist[n_morph]==true){                                        // loop is run in an index if morphogen with that index exists
+            int chance_degration = rnd.nextInt(1000);                           // always a chance of degration
+                if (chance_degration==1 && morph_exist [n_morph]==true){        // if it degrades
+                    morph_exist[amount_morph-1]=false;                          // the last morphogen ceases to exist
+                    xpos_morph[n_morph]=xpos_morph[amount_morph-1];             // the morphogen entry gains the last morphogen's data
+                    xpos_morph[amount_morph-1]=0;                               // the last morphogen's data = 0
+                    ypos_morph[n_morph]=ypos_morph[amount_morph-1];             // the morphogen entry gains the last morphogen's data
+                    ypos_morph[amount_morph-1]=0;                               // the last morphogen's data = 0
+                    amount_morph=amount_morph-1;}                               // amount of morphogen decreases by 1
+                
+ // 4.2) MORPHOGEN VELOCITIES                            
+dx_morph[n_morph]=rnd.nextInt(3);
+    if(rnd.nextInt(100)<65){dx_morph[n_morph]=Math.abs(dx_morph[n_morph]);}     // slight preference of moving with a positive dx
+    if(rnd.nextInt(100)>64){dx_morph[n_morph]=-Math.abs(dx_morph[n_morph]);}    // ^^^
+dy_morph[n_morph]=rnd.nextInt(7)-3;
+            
+// 4.3) MORPHOGEN BOUNDARIES 
+        int xboundary = out_of_frame_x(xpos_morph[n_morph],R_morph,0, xSize);   //just like for stem cells, boundaries. Now, upper bound for x is xSize
+        int yboundary = out_of_frame_y(ypos_morph[n_morph],R_morph, ySize);     //like stem cells
+        if (xboundary==1){dx_morph[n_morph]=Math.abs(dx_morph[n_morph]);}       //like stem cells
+        if (xboundary==2){dx_morph[n_morph]=-Math.abs(dx_morph[n_morph]);}      //like stem cells
+        if (yboundary==1){dy_morph[n_morph]=Math.abs(dy_morph[n_morph]);}       //like stem cells
+        if (yboundary==2){dy_morph[n_morph]=-Math.abs(dy_morph[n_morph]);}      //like stem cells
+                
+        xpos_morph[n_morph]=xpos_morph[n_morph]+dx_morph[n_morph];              //updating morph. positions x
+        ypos_morph[n_morph]=ypos_morph[n_morph]+dy_morph[n_morph];}}            //updating morph. positions y
+
+if (amount_morph>0){ 
+    xpos_morph[amount_morph-1]=xpos1[(amount_morph-1)%N];                       // if a morphogen exists, give it the x coordinate of a specific stem cell's centre
+    ypos_morph[amount_morph-1]=ypos1[(amount_morph-1)%N];}}                     // if a morphogen exists, give it the x coordinate of a specific stem cell's centre
+
+//P 4.4) NEW MORPHOGEN
+int chance_morphogen = rnd.nextInt(10);                                         // probability of morphogen being created
+    if (chance_morphogen==9){                                                   // if it actually happens, amount of morphogen increases
+        amount_morph                 = amount_morph+1;
+        morph_exist [amount_morph-1]   = true;}                                 //-1 because the index starts at 0, not at 1
+
+//
+//
+// DIFFERENTIATING CELLS
+//
+//     
+
+//
+//
+// 5) INTERMEDIATE CELLS
+//
+//     
+if (amount_intermediate>0){
+for (int n=0; n<amount_intermediate; n++){
+//5.1) DIFFERENTIATION TO BLUE CELLS
+        int morph_gradient = amount_of_morphogen(xpos_intermediate[n],ypos_intermediate[n],R_intermediate[n],xpos_morph,ypos_morph,amount_morph-1);
+        if (morph_gradient>5){                                                  //morphogen gradient to differentiate can be adjusted
+           int p_differentiation = rnd.nextInt(10);                             //additionally, probability of actually differentiating when surroundings are OK
+           if (p_differentiation==0){                                           //if it actually happens that an intermediate cell differentiates,
+           amount_blue=amount_blue+1;                                           //extra blue cell
+           xpos_blue[amount_blue-1]=xpos_intermediate[n];                       //give the new blue cell the coordinates of the (previously) intermediate cell
+           ypos_blue[amount_blue-1]=ypos_intermediate[n];                       //give the new blue cell the coordinates of the (previously) intermediate cell
+           R_blue   [amount_blue-1]=R_intermediate[n];                          //give the new blue cell the radius      of the (previously) intermediate cell
+           blue_exist[amount_blue-1]=true;
+          
+           intermediate_exist[amount_intermediate-1]=false;                     //last intermediate ceases to exist
+           xpos_intermediate[n]=xpos_intermediate[amount_intermediate-1];       //coordinates are transferred to the gap, where the intermediate has differentiated
+           xpos_intermediate[amount_intermediate-1]=0;                          //last entry = 0
+           ypos_intermediate[n]=ypos_intermediate[amount_intermediate-1];       //coordinates are transferred to the gap, where the intermediate has differentiated
+           ypos_intermediate[amount_intermediate-1]=0;                          //last entry = 0
+           dx_intermediate[amount_intermediate-1]=0;                            //last entry = 0
+           dy_intermediate[amount_intermediate-1]=0;                            //last entry = 0
+           amount_intermediate=amount_intermediate-1;}}                         
+    
+//5.2) MOVEMENT INTERMEDIATE CELLS
+        dx_intermediate[n]=rnd.nextInt(3)-1;                                                    
+        dy_intermediate [n]=rnd.nextInt(3)-1;                                                  
+        int xboundary = out_of_frame_x(xpos_intermediate[n],R_intermediate[n],xBound1up, xSize);    //can be adjusted
+        int yboundary = out_of_frame_y(ypos_intermediate[n],R_intermediate[n], ySize);
+        if (xboundary==1){dx_intermediate[n]=Math.abs(dx_intermediate[n]);}                         //like boundaries of morph. and stem cells
+        if (xboundary==2){dx_intermediate[n]=-Math.abs(dx_intermediate[n]);}                        //like boundaries of morph. and stem cells
+        if (yboundary==1){dy_intermediate [n]=Math.abs(dy_intermediate [n]);}                       //like boundaries of morph. and stem cells
+        if (yboundary==2){dy_intermediate [n]=-Math.abs(dy_intermediate [n]);}}}                    //like boundaries of morph. and stem cells
+
+//5.3 COLLISIONS BY INTERMEDIATE CELLS
+for (int i=0; i<amount_intermediate; i++){
+// WITH INTERMEDIATES    
+    for (int j=0; j<amount_intermediate; j++){
+    if (overlap(xpos_intermediate[i],ypos_intermediate[i],R_intermediate[i],xpos_intermediate[j],ypos_intermediate[j],R_intermediate[j])==true){    
+        int difference_x = xpos_intermediate[i]-xpos_intermediate[j];                               //like collisions of stem cells
+        int difference_y = ypos_intermediate[i]-ypos_intermediate[j];
+        
+        if (difference_x<0){dx_intermediate[j]= Math.abs(dx_intermediate[j]);                       //move away from eachother
+                            dx_intermediate[i]=-Math.abs(dx_intermediate[i]);}                      //move away from eachother
+        if (difference_x>0){dx_intermediate[i]= Math.abs(dx_intermediate[i]);                       //move away from eachother
+                            dx_intermediate[j]=-Math.abs(dx_intermediate[j]);}                      //move away from eachother
+        
+        if (difference_y<0){dy_intermediate[j]= Math.abs(dy_intermediate[j]);                       //move away from eachother
+                            dy_intermediate[i]=-Math.abs(dy_intermediate[i]);}                      //move away from eachother
+        if (difference_y>0){dy_intermediate[i]= Math.abs(dy_intermediate[i]);                       //move away from eachother
+                            dy_intermediate[j]=-Math.abs(dy_intermediate[j]);}}}                    //move away from eachother
+
+}
+for (int i=0; i<amount_intermediate; i++){
+            xpos_intermediate[i]=xpos_intermediate[i]+dx_intermediate[i];       //updating positions intermediate cells x
+            ypos_intermediate[i]=ypos_intermediate[i]+dy_intermediate[i];}      //updating positions intermediate cells y
+//end of intermediate cells
+
+
+//            
+//6) BLUE CELLS
+//
+
+for(int n=0; n<amount_blue; n++){
+//6.1) BLUE CELLS DIFFERENTIATING 
+        int morph_gradient = amount_of_morphogen(xpos_blue[n],ypos_blue[n],R_blue[n],xpos_morph,ypos_morph,amount_morph-1);
+        if (morph_gradient>10&&morph_gradient<14){                              //can be adjusted
+           int p_differentiation = rnd.nextInt(10);                             //additionaly, probability of differentiating
+           if (p_differentiation==0){
+           amount_pink=amount_pink+1;                                           //pink cell gets created
+           xpos_pink[amount_pink-1]  =  xpos_blue[n];                           //move data from the blue cell to the pink cells
+           ypos_pink[amount_pink-1]  =  ypos_blue[n];
+           R_pink   [amount_pink-1]  =  R_blue[n];
+           pink_exist[amount_pink-1] =  true;
+
+           blue_exist[n]=false;                                                 //blue cell disappears
+           xpos_blue[n]=xpos_blue[amount_blue-1];
+           xpos_blue[amount_blue-1]=0;
+           ypos_blue[n]=ypos_blue[amount_blue-1];
+           ypos_blue[amount_blue-1]=0;
+           dx_blue[amount_blue-1]=0;
+           dy_blue[amount_blue-1]=0;
+           amount_blue=amount_blue-1;}}
+        
+//6.2 BLUE CELLS MOVEMENT
+        dx_blue[n]=rnd.nextInt(3)-1;
+        dy_blue[n]=rnd.nextInt(3)-1;
+        
+          if(rnd.nextInt(100)<68){dx_blue[n]=Math.abs(dx_blue[n]);}             // slight preference of moving with a positive dx
+          if(rnd.nextInt(100)>67){dx_blue[n]=-Math.abs(dx_blue[n]);}            // ^^^
+                
+        int xboundary = out_of_frame_x(xpos_blue[n],R_blue[n],xBound1up, xSize);
+        int yboundary = out_of_frame_y(ypos_blue[n],R_blue[n], ySize);
+        if (xboundary==1){dx_blue[n]=Math.abs(dx_blue[n]);}
+        if (xboundary==2){dx_blue[n]=-Math.abs(dx_blue[n]);}
+        if (yboundary==1){dy_blue[n]=Math.abs(dy_blue[n]);}
+        if (yboundary==2){dy_blue[n]=-Math.abs(dy_blue[n]);}}
+       
+//6.3 COLLISIONS BY BLUE CELLS
+for (int i=0; i<amount_blue; i++){
+//WITH INTERMEDIATES
+    for (int j=0; j<amount_intermediate; j++){
+    if (overlap(xpos_intermediate[j],ypos_intermediate[j],R_intermediate[j],xpos_blue[i],ypos_blue[i],R_blue[i])==true){    
+        int difference_x = xpos_blue[i]-xpos_intermediate[j];                   
+        int difference_y = ypos_blue[i]-ypos_intermediate[j];
+        
+        if (difference_x<0){dx_blue[i]=-Math.abs(dx_blue[i]);}
+        if (difference_x>0){dx_blue[i]= Math.abs(dx_blue[i]);}
+        
+        if (difference_y<0){dy_blue[i]=-Math.abs(dy_blue[i]);}
+        if (difference_y>0){dy_blue[i]= Math.abs(dy_blue[i]);}}}
+    
+//WITH OTHER BLUE CELLS
+    for (int j=0; j<amount_blue; j++){
+    if (overlap(xpos_blue[i],ypos_blue[i],R_blue[i],xpos_blue[j],ypos_blue[j],R_blue[j])==true){    
+        int difference_x = xpos_blue[i]-xpos_blue[j];
+        int difference_y = ypos_blue[i]-ypos_blue[j];
+        
+        if (difference_x<0){dx_blue[j]= Math.abs(dx_blue[j]);
+                            dx_blue[i]=-Math.abs(dx_blue[i]);}
+        if (difference_x>0){dx_blue[i]= Math.abs(dx_blue[i]);
+                            dx_blue[j]=-Math.abs(dx_blue[j]);}
+        
+        if (difference_y<0){dy_blue[j]= Math.abs(dy_blue[j]);
+                            dy_blue[i]=-Math.abs(dy_blue[i]);}
+        if (difference_y>0){dy_blue[i]= Math.abs(dy_blue[i]);
+                            dy_blue[j]=-Math.abs(dy_blue[j]);}}}
+}
+
+
+//6.4 UPDATING XPOS AND YPOS BLUE
+for (int i=0; i<amount_blue; i++){
+        xpos_blue[i]=xpos_blue[i]+dx_blue[i];
+        ypos_blue[i]=ypos_blue[i]+dy_blue[i];}                                  
+//end of blue cells
+
+
+//           
+//7) PINKT CELLS
+//
+
+for(int n=0; n<amount_pink; n++){
+//7.1 PINK CELLS DIFFERENTIATING
+        int morph_gradient = amount_of_morphogen(xpos_pink[n],ypos_pink[n],R_pink[n],xpos_morph,ypos_morph,amount_morph-1);
+        if (morph_gradient>=14){                                                //can be adjusted
+           int p_differentiation = rnd.nextInt(10);
+           if (p_differentiation==0){
+           amount_red=amount_red+1;
+           xpos_red[amount_red-1]  =xpos_pink[n];
+           ypos_red[amount_red-1]  =ypos_pink[n];
+           R_red    [amount_red-1]  =R_pink[n];
+           red_exist[amount_red-1]=true;
+
+           pink_exist[n]=false;
+           xpos_pink[n]=xpos_pink[amount_pink-1];
+           xpos_pink[amount_pink-1]=0;
+           ypos_pink[n]=ypos_pink[amount_pink-1];
+           ypos_pink[amount_pink-1]=0;
+           dx_pink[amount_pink-1]=0;
+           dy_pink[amount_pink-1]=0;
+           amount_pink=amount_pink-1;}}
+        
+//7.2 PINK CELLS MOVEMENT
+        dx_pink[n]=rnd.nextInt(3)-1;
+        dy_pink[n]=rnd.nextInt(3)-1;
+        
+        if(rnd.nextInt(100)<65){dx_pink[n]=Math.abs(dx_pink[n]);}               // slight preference of moving with a positive dx
+        if(rnd.nextInt(100)>64){dx_pink[n]=-Math.abs(dx_pink[n]);}              // ^^^
+        
+        int xboundary = out_of_frame_x(xpos_pink[n],R_pink[n],xBound1up, xSize);
+        int yboundary = out_of_frame_y(ypos_pink[n],R_pink[n], ySize);
+        if (xboundary==1){dx_pink[n]=Math.abs(dx_pink[n]);}
+        if (xboundary==2){dx_pink[n]=-Math.abs(dx_pink[n]);}
+        if (yboundary==1){dy_pink[n]=Math.abs(dy_pink[n]);}
+        if (yboundary==2){dy_pink[n]=-Math.abs(dy_pink[n]);}}
+
+
+//7.3 COLLISIONS WITH PINK CELLS
+for (int i=0; i<amount_pink; i++){
+//WITH INTERMEDIATE CELLS
+    for (int j=0; j<amount_intermediate; j++){
+    if (overlap(xpos_intermediate[j],ypos_intermediate[j],R_intermediate[j],xpos_pink[i],ypos_pink[i],R_pink[i])==true){    
+        int difference_x = xpos_pink[i]-xpos_intermediate[j];
+        int difference_y = ypos_pink[i]-ypos_intermediate[j];
+        
+        if (difference_x<0){dx_pink[i]=-Math.abs(dx_pink[i]);}
+        if (difference_x>0){dx_pink[i]= Math.abs(dx_pink[i]);}
+        
+        if (difference_y<0){dy_pink[i]=-Math.abs(dy_pink[i]);}
+        if (difference_y>0){dy_pink[i]= Math.abs(dy_pink[i]);}}}
+    
+//COLLISIONS WITH BLUE CELLS    
+    for (int j=0; j<amount_blue; j++){
+    if (overlap(xpos_blue[j],ypos_blue[j],R_blue[j],xpos_pink[i],ypos_pink[i],R_pink[i])==true){    
+        int difference_x = xpos_pink[i]-xpos_blue[j];
+        int difference_y = ypos_pink[i]-ypos_blue[j];
+        
+        if (difference_x<0){dx_pink[i]=-Math.abs(dx_pink[i]);}
+        if (difference_x>0){dx_pink[i]= Math.abs(dx_pink[i]);}
+        
+        if (difference_y<0){dy_pink[i]=-Math.abs(dy_pink[i]);}
+        if (difference_y>0){dy_pink[i]= Math.abs(dy_pink[i]);}}}
+    
+//COLLISIONS BY PINK CELLS    
+    for (int j=0; j<amount_pink; j++){
+    if (overlap(xpos_pink[i],ypos_pink[i],R_pink[i],xpos_pink[j],ypos_pink[j],R_pink[j])==true){    
+        int difference_x = xpos_pink[i]-xpos_pink[j];
+        int difference_y = ypos_pink[i]-ypos_pink[j];
+        
+        if (difference_x<0){dx_pink[i]=-Math.abs(dx_pink[i]);
+                            dx_pink[j]= Math.abs(dx_pink[j]);}
+        if (difference_x>0){dx_pink[i]= Math.abs(dx_pink[i]);
+                            dx_pink[j]=-Math.abs(dx_pink[j]);}
+        if (difference_y<0){dy_pink[i]=-Math.abs(dy_pink[i]);
+                            dy_pink[j]= Math.abs(dy_pink[j]);}
+        if (difference_y>0){dy_pink[i]= Math.abs(dy_pink[i]);
+                            dy_pink[j]=-Math.abs(dy_pink[j]);}
+}}}
+
+//6.4 UPDATING XPOS AND YPOS PINK
+for (int i=0; i<amount_pink; i++){
+        xpos_pink[i]=xpos_pink[i]+dx_pink[i];
+        ypos_pink[i]=ypos_pink[i]+dy_pink[i];}                                  
+//end of pink cells
+
+
+//
+//8) RED CELLS
+//
+
+//8.1 RED CELLS MOVEMENT
+for(int n=0; n<amount_red; n++){       
+        dx_red[n]=rnd.nextInt(3)-1;
+        dy_red[n]=rnd.nextInt(3)-1;
+        int xboundary = out_of_frame_x(xpos_red[n],R_red[n],xBound1up, xSize);
+        int yboundary = out_of_frame_y(ypos_red[n],R_red[n], ySize);
+        
+        if (xboundary==1){dx_red[n]=Math.abs(dx_red[n]);}
+        if (xboundary==2){dx_red[n]=-Math.abs(dx_red[n]);}
+        if (yboundary==1){dy_red[n]=Math.abs(dy_red[n]);}
+        if (yboundary==2){dy_red[n]=-Math.abs(dy_red[n]);}}
+
+for(int i=0; i<amount_red; i++){      
+//8.2 COLLISIONS BY RED CELLS
+//WITH INTERMEDIATES
+    for (int j=0; j<amount_intermediate; j++){
+    if (overlap(xpos_intermediate[j],ypos_intermediate[j],R_intermediate[j],xpos_red[i],ypos_red[i],R_red[i])==true){    
+        int difference_x = xpos_red[i]-xpos_intermediate[j];
+        int difference_y = ypos_red[i]-ypos_intermediate[j];
+        
+        if (difference_x<0){dx_red[i]=-Math.abs(dx_red[i]);}
+        if (difference_x>0){dx_red[i]= Math.abs(dx_red[i]);}
+        
+        if (difference_y<0){dy_red[i]=-Math.abs(dy_red[i]);}
+        if (difference_y>0){dy_red[i]= Math.abs(dy_red[i]);}}}
+    
+//COLLISIONS WITH BLUE CELLS    
+    for (int j=0; j<amount_blue; j++){
+    if (overlap(xpos_blue[j],ypos_blue[j],R_blue[j],xpos_red[i],ypos_red[i],R_red[i])==true){    
+        int difference_x = xpos_red[i]-xpos_blue[j];
+        int difference_y = ypos_red[i]-ypos_blue[j];
+        
+        if (difference_x<0){dx_red[i]=-Math.abs(dx_red[i]);}
+        if (difference_x>0){dx_red[i]= Math.abs(dx_red[i]);}
+        
+        if (difference_y<0){dy_red[i]=-Math.abs(dy_red[i]);}
+        if (difference_y>0){dy_red[i]= Math.abs(dy_red[i]);}}}
+    
+//COLLISIONS BY PINK CELLS    
+    for (int j=0; j<amount_pink; j++){
+    if (overlap(xpos_pink[j],ypos_pink[j],R_pink[j],xpos_red[i],ypos_red[i],R_red[i])==true){    
+        int difference_x = xpos_red[i]-xpos_pink[j];
+        int difference_y = ypos_red[i]-ypos_pink[j];
+        
+        if (difference_x<0){dx_red[i]=-Math.abs(dx_red[i]);}
+        if (difference_x>0){dx_red[i]= Math.abs(dx_red[i]);}
+        
+        if (difference_y<0){dy_red[i]=-Math.abs(dy_red[i]);}
+        if (difference_y>0){dy_red[i]= Math.abs(dy_red[i]);}}}
+
+//COLLISIONS WITH RED CELLS
+    for (int j=0; j<amount_red; j++){
+    if (overlap(xpos_red[i],ypos_red[i],R_red[i],xpos_red[j],ypos_red[j],R_red[j])==true){    
+        int difference_x = xpos_red[i]-xpos_red[j];
+        int difference_y = ypos_red[i]-ypos_red[j];
+        
+        if (difference_x<0){dx_red[i]=-Math.abs(dx_red[i]);
+                            dx_red[j]= Math.abs(dx_red[j]);}
+        if (difference_x>0){dx_red[i]= Math.abs(dx_red[i]);
+                            dx_red[j]=-Math.abs(dx_red[j]);}
+        if (difference_y<0){dy_red[i]=-Math.abs(dy_red[i]);
+                            dy_red[j]= Math.abs(dy_red[j]);}
+        if (difference_y>0){dy_red[i]= Math.abs(dy_red[i]);
+                            dy_red[j]=-Math.abs(dy_red[j]);}
+}}}
+
+
+
+//8.4 UPDATING XPOS AND YPOS red
+for (int i=0; i<amount_red; i++){
+        xpos_red[i]=xpos_red[i]+dx_red[i];
+        ypos_red[i]=ypos_red[i]+dy_red[i];}                                  
+//end of red cells
+
+
+
+
+//
+//9) CELL DIVISION (STEM CELLS)
+//
+
+for (int i=0; i<N; i++){
+    int chance_division = rnd.nextInt(50*10);
+    if (chance_division==0){
+        for (int jj=0; jj<N; jj++){
+            for (int r=0; r<25; r++){                                           //if there's room, checked by adding or subtracting R from the x and y coordinates
+                int y_rnd       = rnd.nextInt(3)-1;                     
+                int x_potential = xpos1[i]+R1[i];
+                int y_potential = ypos1[i]+R1[i]*y_rnd;
+                int R_potential = R1[i];
+                   if (i<jj || jj<i){
+                        if (overlap(x_potential,y_potential,R_potential,xpos1[jj],ypos1[jj],R1[jj])==false
+                            &&overlap(x_potential,y_potential,R_potential,xpos_intermediate[jj],ypos_intermediate[jj],R_intermediate[jj])==false
+                            &&overlap(x_potential,y_potential,R_potential,xpos_blue[jj],ypos_blue[jj],R_blue[jj])==false
+                            &&overlap(x_potential,y_potential,R_potential,xpos_pink[jj],ypos_pink[jj],R_pink[jj])==false
+                            &&overlap(x_potential,y_potential,R_potential,xpos_red[jj],ypos_red[jj],R_red[jj])==false && x_potential>xBound1up-R_potential){
+
+amount_intermediate                      =   amount_intermediate+1;
+intermediate_exist[amount_intermediate-1]=   true;
+xpos_intermediate[amount_intermediate-1] = x_potential;
+ypos_intermediate [amount_intermediate-1]= y_potential;
+R_intermediate    [amount_intermediate-1]= R_potential;
+r=100;
+jj=N;}}}}}}
+
+
+
+//
+//10) CELL DIVISION INTERMEDIATE CELLS
+//
+/*
+for (int i=0; i<=amount_intermediate-1; i++){
+    int chance_division = rnd.nextInt(1000);
+    if (chance_division==80){
+        for (int jj=0; jj<=amount_intermediate-1; jj++){
+            for (int r=0; r<25; r++){
+                int x_rnd       = rnd.nextInt(3)-1;
+                int y_rnd       = rnd.nextInt(3)-1;
+                int x_potential = xpos_intermediate[i]+R_intermediate[i]*x_rnd;
+                int y_potential = ypos_intermediate[i]+R_intermediate[i]*y_rnd;
+                int R_potential = R_intermediate[i];
+                   if (i<jj || i>jj){
+                        if (overlap(x_potential,y_potential,R_potential,xpos1[jj],ypos1[jj],R1[jj])==false){
+                            amount_intermediate                           = amount_intermediate+1;
+                            intermediate_exist[amount_intermediate-1]       = true;
+                            xpos_intermediate [amount_intermediate-1]       = x_potential;
+                            ypos_intermediate [amount_intermediate-1]       = y_potential;
+                            R_intermediate    [amount_intermediate-1]       = R_potential;
+                            r=100;
+                            jj=2*amount_intermediate;}
+                   }}}}} 
+*/
+
+//
+//11) COLLISIONS WITH ALL ARRAYS
+//
+/*
+for(int i=0; i<amount_intermediate; i++){
+    all_exist[i]=true;
+    all_xpos[i]=xpos_intermediate[i];
+    all_ypos[i]=ypos_intermediate[i];
+    all_R[i]=R_intermediate[i];
+    
+for (int j=0; j<amount_all; j++){
+    if (overlap(xpos_intermediate[i],ypos_intermediate[i],R_intermediate[i],all_xpos[j],all_ypos[j],all_R[j])==true){    
+        int difference_x = xpos_intermediate[i]-all_xpos[j];
+        int difference_y = ypos_intermediate[i]-all_ypos[j];
+        
+        if (difference_x<0){dx_intermediate[i]=-Math.abs(dx_intermediate[i]);}
+        if (difference_x>0){dx_intermediate[i]= Math.abs(dx_intermediate[i]);}
+        if (difference_y<0){dy_intermediate[i]=-Math.abs(dy_intermediate[i]);}
+        if (difference_y>0){dy_intermediate[i]= Math.abs(dy_intermediate[i]);}}}}
+    
+        //blue
+for(int i=0; i<amount_blue; i++){
+    all_exist[i+amount_intermediate]=true;
+    all_xpos[i+amount_intermediate]=xpos_blue[i];
+    all_ypos[i+amount_intermediate]=ypos_blue[i];
+    all_R[i+amount_intermediate]=R_blue[i];
+    
+    for (int j=0; j<amount_all; j++){
+    if (overlap(xpos_blue[i],ypos_blue[i],R_blue[i],all_xpos[j],all_ypos[j],all_R[j])==true){    
+        int difference_x = xpos_blue[i]-all_xpos[j];
+        int difference_y = ypos_blue[i]-all_ypos[j];
+        
+        if (difference_x<0){dx_blue[i]=-Math.abs(dx_blue[i]);}
+        if (difference_x>0){dx_blue[i]= Math.abs(dx_blue[i]);}
+        if (difference_y<0){dy_blue[i]=-Math.abs(dy_blue[i]);}
+        if (difference_y>0){dy_blue[i]= Math.abs(dy_blue[i]);}}}}
+//pink
+for(int i=0; i<amount_pink; i++){
+    all_exist[i+amount_intermediate+amount_blue]=true;
+    all_xpos[i+amount_intermediate+amount_blue]=xpos_pink[i];
+    all_ypos[i+amount_intermediate+amount_blue]=ypos_pink[i];
+    all_R[i+amount_intermediate+amount_blue]=R_pink[i];
+    
+for (int j=0; j<amount_all; j++){
+    if (overlap(xpos_pink[i],ypos_pink[i],R_pink[i],all_xpos[j],all_ypos[j],all_R[j])==true){    
+        int difference_x = xpos_pink[i]-all_xpos[j];
+        int difference_y = ypos_pink[i]-all_ypos[j];
+        
+        if (difference_x<0){dx_pink[i]=-Math.abs(dx_pink[i]);}
+        if (difference_x>0){dx_pink[i]= Math.abs(dx_pink[i]);}
+        if (difference_y<0){dy_pink[i]=-Math.abs(dy_pink[i]);}
+        if (difference_y>0){dy_pink[i]= Math.abs(dy_pink[i]);}}}}
+amount_all=amount_intermediate+amount_blue+amount_pink+amount_red;
+*/
+
+
+//
+//13 DRAWING
+//
+
+//STEM CELLS
+for (int i=0; i<N; i++){
+    pen.drawCircle(xpos1[i], ypos1[i], R1[i], Color.GRAY, true);}
+
+//MORPHOGEN
+if (amount_morph>0){
+for (int i=0; i<amount_morph; i++){
+if (morph_exist[i]==true){
+       pen.drawCircle(xpos_morph[i], ypos_morph[i], R_morph, Color.GREEN, true);}}}
+
+//INTERMEDIATES
+if (amount_intermediate>0){
+    for (int i=0; i<amount_intermediate; i++){
+    pen.drawCircle(xpos_intermediate[i], ypos_intermediate[i], R_intermediate[i], Color.WHITE, true);}}
+
+//BLUE
+if (amount_blue>0){
+    for (int i=0; i<amount_blue; i++){
+    pen.drawCircle(xpos_blue[i], ypos_blue[i], R_blue[i], Color.BLUE, true);}}
+
+//PINK
+if (amount_pink>0){
+    for (int i=0; i<amount_pink; i++){
+    pen.drawCircle(xpos_pink[i], ypos_pink[i], R_pink[i], Color.PINK, true);}}
+
+//RED
+if (amount_red>0){
+    for (int i=0; i<amount_red; i++){
+    pen.drawCircle(xpos_red[i], ypos_red[i], R_red[i], Color.RED, true);}}
+
+screen.update();
+screen.pause(10);
+t=t+1; 
+    }}
+    
+
+//method
+public boolean overlap (int x1, int y1, int R1, int x2, int y2, int R2){
+boolean Overlap  = false;
+int     xdistance=  Math.abs(x1-x2);
+double  xsqrd    =  Math.pow(xdistance,2);
+int     ydistance=  Math.abs(y1-y2);
+double  ysqrd    =  Math.pow(ydistance,2);
+double  distsqrd =  xsqrd+ysqrd;   
+double  distance =  Math.pow(distsqrd,0.5);        
+int     R_combined=R1+R2;
+if (distance<R_combined && distance>0){
+    Overlap=true;}
+return  Overlap;}
+
+public int out_of_frame_x (int x, int R, int xdown, int xup){
+int xbndry =0;
+if (x-R<=xdown){xbndry=1;}
+if (x+R>=xup){xbndry=2;}
+return (xbndry);}
+
+public int out_of_frame_y (int y, int R, int yup){
+int ybndry =0;
+if (y-R<=0){ybndry=1;}
+if (y+R>=yup){ybndry=2;}
+return (ybndry);}
+
+public boolean does_cell2_divide (int x1, int y1, int R1, int x2, int y2, int R2){
+    boolean divide                  =   false;
+    Random rnd                      =   new Random ();
+    for (int j=0; j<20; j++){
+        int x_random    =rnd.nextInt(1)-1;
+        int y_random    =rnd.nextInt(1)-1;
+        int x_potential= x1+x_random*R1;
+        int y_potential= y1+y_random*R1;
+            if(overlap (x1,y1,R1,x2,y2,R2)==false){}}
+return (divide);}
+
+public int amount_of_morphogen (int x, int y, int R, int [] x_morph, int [] y_morph,int N_m){
+    int amount = 0;
+        for(int i=0; i<N_m; i++){
+            if(overlap(x,y,R*3,x_morph[i],y_morph[i],0)==true)
+        amount=amount+1;}
+    return(amount);}
+
+    public static void main(String[] args) {
+        Exercise3_final e = new Exercise3_final();
+    }}
